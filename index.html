@@ -31,7 +31,6 @@
     position: relative;
     overflow: hidden;
   }
-  /* Loading shimmer SIRF card ke upar (frame par), full page par nahi */
   .card::before {
     content: "";
     position: absolute;
@@ -92,7 +91,6 @@
   }
   .dot.live { background: #22c55e; box-shadow: 0 0 12px #22c55e; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.45; } 100% { opacity: 1; } }
-  /* Loading spinner dots sirf card ke andar */
   .loader {
     display: inline-flex;
     gap: 4px;
@@ -160,13 +158,25 @@
     border-radius: 10px; font-size: 13px; color: #86efac; display: none; text-align: center;
     position: relative; z-index: 1;
   }
+  .note {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #93c5fd;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
   <div class="logo-container">
-    <!-- Apni image logo.webp ya logo.png same folder mein rakhein -->
     <img id="companyLogo" src="logo.webp" alt="Virtual Software Company Logo" onerror="this.src='logo.png'; this.onerror=null;">
   </div>
   <p class="company-tag" id="agentDisplay">AI Receptionist: Aria</p>
@@ -195,6 +205,8 @@
   </div>
 
   <div id="savedBox" class="saved">✅ Appointment saved locally!</div>
+
+  <div class="note">Ask me about Office hours, Services, Solutions, Company, Hiring and Appointments</div>
 </div>
 
 <script>
@@ -453,43 +465,58 @@ function toggleCall() {
 function getBrainReply(text) {
   const t = text.toLowerCase().trim();
 
+  // Transfer to human
   if (t.includes('human') || t.includes('transfer') || t.includes('speak to a person') || t.includes('representative') || t.includes('agent')) {
     return { text: "Let me connect you with a member of our team at " + COMPANY_NAME + ".", action: 'transfer' };
   }
 
+  // Office hours only
   if (t.includes('hour') || t.includes('open') || t.includes('time') || t.includes('schedule') || t.includes('when')) {
     return { text: "Our office hours are " + COMPANY_HOURS };
   }
 
+  // Location / Company name only
   if (t.includes('where') || t.includes('location') || t.includes('address') || t.includes('situated') || t.includes('based') || t.includes('about') || t.includes('company') || t.includes('who are you') || t.includes('intro')) {
     return { text: "We are " + COMPANY_NAME + ", located at " + COMPANY_LOCATION };
   }
 
+  // Contact / email only
   if (t.includes('contact') || t.includes('email') || t.includes('mail') || t.includes('phone') || t.includes('call') || t.includes('whatsapp')) {
     return { text: "You can email us at " + COMPANY_EMAIL + "." };
   }
 
+  // Services only
   if (t.includes('service') || t.includes('offer') || t.includes('what do you do') || t.includes('development') || t.includes('software') || t.includes('marketing') || t.includes('seo') || t.includes('automation')) {
     return { text: "We offer " + COMPANY_SERVICES };
   }
 
+  // Solutions only
   if (t.includes('solution') || t.includes('package') || t.includes('transformation') || t.includes('growth') || t.includes('audit') || t.includes('vimz')) {
     return { text: "Our solutions include " + COMPANY_SOLUTIONS };
   }
 
+  // Resources only
   if (t.includes('resource') || t.includes('insight') || t.includes('guide') || t.includes('tool')) {
     return { text: "We provide " + COMPANY_RESOURCES };
   }
 
+  // Portfolio / Recognition only
   if (t.includes('portfolio') || t.includes('recognition') || t.includes('work')) {
     return { text: COMPANY_PORTFOLIO };
   }
 
+  // Hiring / Jobs / Career
+  if (t.includes('hire') || t.includes('hiring') || t.includes('job') || t.includes('career') || t.includes('join') || t.includes('talent') || t.includes('opening') || t.includes('recruit') || t.includes('employment') || t.includes('work with us')) {
+    return { text: "We are always looking for talented people to join our team. We will have openings soon. Would you like to book an appointment to discuss opportunities?" };
+  }
+
+  // Start booking
   if (t.includes('appointment') || t.includes('book') || t.includes('schedule a meeting') || t.includes('booking')) {
     booking = { step: 'name', data: {} };
     return { text: "I'd be happy to help you book an appointment with " + COMPANY_NAME + ". May I have your full name, please?" };
   }
 
+  // Booking flow steps
   if (booking) {
     if (booking.step === 'name') {
       booking.data.name = text;
@@ -523,7 +550,8 @@ function getBrainReply(text) {
     }
   }
 
-  return { text: "I can help with office hours, location, services, solutions, or booking an appointment. What would you like to know?" };
+  // Default fallback: off-topic or detailed question -> transfer
+  return { text: "I am an assistant, I provide general information. For more details, let me transfer you to our team at " + COMPANY_NAME + ".", action: 'transfer' };
 }
 
 async function handleUserInput(text) {
