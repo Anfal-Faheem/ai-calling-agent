@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Software Company - Aria Receptionist</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 0 20px;
+    background: #f3f4f6;
+    color: #111827;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  h2 { margin-top: 0; font-size: 22px; color: #111827; }
+  .company-tag {
+    font-size: 14px; color: #6b7280; margin-bottom: 16px;
+  }
+  .status {
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin: 12px 0;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status.idle { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+  .status.listening { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .status.thinking { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+  .status.speaking { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%; background: #e5e7eb;
+    flex-shrink: 0;
+  }
+  .dot.live { background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  #transcript {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 14px; min-height: 52px; font-size: 16px; margin-bottom: 14px;
+  }
+  .voice-box { margin: 14px 0; }
+  .voice-box label {
+    display: block; margin-bottom: 6px; font-size: 14px; color: #374151; font-weight: 600;
+  }
+  select {
+    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 15px;
+  }
+  button {
+    background: #111827; color: white; border: none; padding: 14px 22px;
+    border-radius: 10px; font-size: 17px; cursor: pointer; width: 100%; margin: 8px 0;
+  }
+  button:disabled { background: #9ca3af; cursor: not-allowed; }
+  button.end { background: #dc2626; }
+  button.secondary { background: #059669; }
+  .test-box { margin-top: 16px; border-top: 1px solid #e5e7eb; padding-top: 14px; }
+  .test-box input {
+    width: 72%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px;
+  }
+  .test-box button { width: 26%; padding: 9px 0; font-size: 14px; }
+  .hint {
+    margin-top: 16px; font-size: 13px; color: #6b7280; line-height: 1.5;
+  }
+  .saved {
+    margin-top: 12px; padding: 10px; background: #ecfdf5; border: 1px solid #86efac;
+    border-radius: 8px; font-size: 13px; color: #065f46; display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2 id="companyDisplay">Virtual Software Company</h2>
+  <p class="company-tag" id="agentDisplay">AI Receptionist: Aria</p>
+
+  <div id="status" class="status idle">
+    <span class="dot" id="micDot"></span>Ready. Click <b>Start Call</b>.
+  </div>
+
+  <div id="transcript"></div>
+
+  <div class="voice-box">
+    <label for="voiceSelect">Choose Voice (Female / Girl):</label>
+    <select id="voiceSelect"></select>
+  </div>
+
+  <button id="mainBtn" class="" onclick="toggleCall()">Start Call</button>
+  <button class="secondary" onclick="testText()">Test: Send Text (No Mic)</button>
+
+  <div class="test-box">
+    <input type="text" id="testInput" placeholder="Type: hello">
+    <button onclick="testText()">Send</button>
+  </div>
+
+  <div id="savedBox" class="saved">✅ Appointment saved locally!</div>
+
+  <div class="hint">
+    <b>Tip:</b> Use Chrome or Edge. Allow microphone when asked.<br>
+    <b>100% Free:</b> No server, no API key, no phone number needed.<br>
+    <b>Agent:</b> Aria | <b>Company:</b> Virtual Software Company
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   COMPANY DETAILS - Virtual Software Company
+   ============================================================ */
+const COMPANY_NAME = "Virtual Software Company";
+const AGENT_NAME = "Aria";
+const COMPANY_DESCRIPTION = "Software, AI automation, digital marketing and business growth systems delivered from Pakistan to clients worldwide.";
+const COMPANY_SUMMARY = "Pakistan Headquarters. International Delivery. Software, marketing, SEO and AI automation under one accountable team.";
+const COMPANY_ADDRESS = "4th Floor, Trade Center, G.T. Road, Gujranwala, Pakistan";
+const COMPANY_EMAIL = "hello@virtualsoftwarecompany.com";
+const COMPANY_PHONE = ""; // WhatsApp not added yet
+
+const SERVICES_LIST = "Website Development, Custom Software, AI Automation, SEO & AI Search, and Digital Marketing.";
+const SOLUTIONS_LIST = "Business Packages, Vimz AI Products, Complete Transformation, Overseas Business Growth, and Business Audit.";
+const RESOURCES_LIST = "Insights, Guides & Tools.";
+const OTHER_INFO = "Portfolio and Recognition available.";
+
+/* ============================================================ */
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const synth = window.speechSynthesis;
+
+let voices = [];
+let recognition = null;
+let isCalling = false;
+let isProcessing = false;
+let lastFinalText = "";
+let booking = null;
+
+// Update display
+document.getElementById('companyDisplay').textContent = COMPANY_NAME;
+document.getElementById('agentDisplay').textContent = "AI Receptionist: " + AGENT_NAME;
+
+const statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript');
+const micDot = document.getElementById('micDot');
+const mainBtn = document.getElementById('mainBtn');
+const voiceSelect = document.getElementById('voiceSelect');
+const testInput = document.getElementById('testInput');
+const savedBox = document.getElementById('savedBox');
+
+function setStatus(cls, text) {
+  statusEl.className = 'status ' + cls;
+  const dotHtml = (cls === 'listening')
+    ? '<span class="dot live" id="micDot"></span>'
+    : '<span class="dot" id="micDot"></span>';
+  statusEl.innerHTML = dotHtml + text;
+}
+
+function log(msg) { console.log('[Receptionist]', msg); }
+
+function populateVoices() {
+  voices = synth.getVoices();
+  voiceSelect.innerHTML = '';
+  let targetIndex = -1;
+  voices.forEach((v, i) => {
+    const lang = (v.lang || '').toLowerCase();
+    const isHindiIN = lang === 'hi-in' || lang.startsWith('hi-in');
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(option);
+    if (isHindiIN && targetIndex === -1) targetIndex = i;
+  });
+  if (targetIndex === -1) {
+    voices.forEach((v, i) => {
+      const name = v.name.toLowerCase();
+      const isFemale =
+        name.includes('female') || name.includes('woman') ||
+        name.includes('samantha') || name.includes('victoria') ||
+        name.includes('karen') || name.includes('hazel') ||
+        name.includes('emma') || name.includes('zira') ||
+        name.includes('susi') || name.includes('linda') ||
+        name.includes('nicole');
+      if (isFemale && targetIndex === -1) targetIndex = i;
+    });
+  }
+  if (targetIndex !== -1) voiceSelect.value = targetIndex;
+}
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoices;
+populateVoices();
+
+function speak(text) {
+  if (synth.speaking) synth.cancel();
+  isProcessing = true;
+  setStatus('speaking', AGENT_NAME + " is speaking...");
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.pitch = 1.1;
+  u.volume = 1.0;
+  const sel = parseInt(voiceSelect.value);
+  if (!isNaN(sel) && voices[sel]) u.voice = voices[sel];
+  u.onend = () => {
+    isProcessing = false;
+    if (isCalling) setTimeout(() => startListening(), 700);
+  };
+  u.onerror = (e) => {
+    log("TTS error: " + e.error);
+    isProcessing = false;
+    if (isCalling) startListening();
+  };
+  synth.speak(u);
+}
+
+function startListening() {
+  if (!SpeechRecognition) {
+    setStatus('idle', "Speech recognition not supported. Use Chrome/Edge.");
+    return;
+  }
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+    recognition = null;
+  }
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
+  recognition.onspeechstart = () => {
+    transcriptEl.textContent = "";
+    setStatus('listening', "Listening... Speak now.");
+  };
+  recognition.onspeechend = () => {
+    setStatus('thinking', "Processing...");
+    try { recognition.stop(); } catch(e) {}
+  };
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript.trim();
+    log("Recognized: " + text);
+    transcriptEl.textContent = "You said: " + text;
+    if (text && text !== lastFinalText) {
+      lastFinalText = text;
+      handleUserInput(text);
+    }
+  };
+  recognition.onerror = (e) => {
+    log("Recognition error: " + e.error);
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      setStatus('idle', "Microphone blocked. Click lock icon → Allow.");
+      endCall();
+    } else if (e.error === 'no-speech') {
+      if (isCalling) startListening();
+    } else if (isCalling) {
+      setTimeout(() => startListening(), 1000);
+    }
+  };
+  recognition.onend = () => { recognition = null; };
+  try { recognition.start(); } catch (e) { log("Start error: " + e.message); }
+}
+
+function endCall() {
+  isCalling = false;
+  isProcessing = false;
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  if (synth.speaking) synth.cancel();
+  mainBtn.textContent = "Start Call";
+  mainBtn.className = "";
+  mainBtn.onclick = toggleCall;
+  setStatus('idle', "Call ended.");
+  transcriptEl.textContent = "";
+  lastFinalText = "";
+  savedBox.style.display = 'none';
+}
+
+function toggleCall() {
+  if (isCalling) {
+    endCall();
+  } else {
+    isCalling = true;
+    booking = null;
+    mainBtn.textContent = "End Call";
+    mainBtn.className = "end";
+    mainBtn.onclick = toggleCall;
+    speak("Thank you for calling " + COMPANY_NAME + ". This is " + AGENT_NAME + ". How can I help you today?");
+  }
+}
+
+function getBrainReply(text) {
+  const t = text.toLowerCase().trim();
+
+  // Transfer to human
+  if (t.includes('human') || t.includes('transfer') || t.includes('speak to a person') || t.includes('representative') || t.includes('agent')) {
+    return { text: "Let me connect you with a member of our team at " + COMPANY_NAME + ".", action: 'transfer' };
+  }
+
+  // Office hours
+  if (t.includes('hour') || t.includes('open') || t.includes('time') || t.includes('schedule') || t.includes('when')) {
+    return { text: "Our office hours are Monday to Friday, 9:00 AM to 6:00 PM Pakistan Time." };
+  }
+
+  // About / company details
+  if (t.includes('about') || t.includes('company') || t.includes('what do you do') || t.includes('services') || t.includes('detail') || t.includes('address') || t.includes('contact') || t.includes('email') || t.includes('where')) {
+    return { text: "We are " + COMPANY_NAME + ". " + COMPANY_SUMMARY + " " + COMPANY_DESCRIPTION + " Our services include " + SERVICES_LIST + " Our solutions include " + SOLUTIONS_LIST + " Resources include " + RESOURCES_LIST + " You can find us at " + COMPANY_ADDRESS + ". Email us at " + COMPANY_EMAIL + "." };
+  }
+
+  // Start booking
+  if (t.includes('appointment') || t.includes('book') || t.includes('schedule a meeting') || t.includes('booking')) {
+    booking = { step: 'name', data: {} };
+    return { text: "I'd be happy to help you book an appointment with " + COMPANY_NAME + ". May I have your full name, please?" };
+  }
+
+  // Booking flow
+  if (booking) {
+    if (booking.step === 'name') {
+      booking.data.name = text;
+      booking.step = 'email';
+      return { text: "Thank you. What is your email address?" };
+    }
+    if (booking.step === 'email') {
+      booking.data.email = text;
+      booking.step = 'date';
+      return { text: "Got it. What is your preferred date?" };
+    }
+    if (booking.step === 'date') {
+      booking.data.date = text;
+      booking.step = 'time';
+      return { text: "And what time would you prefer?" };
+    }
+    if (booking.step === 'time') {
+      booking.data.time = text;
+      booking.step = 'purpose';
+      return { text: "Lastly, what is the purpose of your visit?" };
+    }
+    if (booking.step === 'purpose') {
+      booking.data.purpose = text;
+      const appts = JSON.parse(localStorage.getItem('vsc_appointments') || '[]');
+      appts.push({ ...booking.data, bookedAt: new Date().toISOString(), company: COMPANY_NAME });
+      localStorage.setItem('vsc_appointments', JSON.stringify(appts));
+      const done = booking;
+      booking = null;
+      savedBox.style.display = 'block';
+      return { text: "Thank you, " + done.data.name + ". Your appointment has been booked with " + COMPANY_NAME + ". We look forward to seeing you." };
+    }
+  }
+
+  // Default / fallback
+  return { text: "Thank you for calling " + COMPANY_NAME + ". I am " + AGENT_NAME + ". I can help you with company details, services, booking an appointment, or transferring you to a human. How can I assist you today?" };
+}
+
+async function handleUserInput(text) {
+  if (isProcessing) return;
+  isProcessing = true;
+  const reply = getBrainReply(text);
+  log("AI: " + JSON.stringify(reply));
+  if (reply.action === 'transfer') {
+    setStatus('speaking', "Transferring to human...");
+    speak(reply.text);
+    endCall();
+    return;
+  }
+  speak(reply.text);
+}
+
+function testText() {
+  const text = testInput.value.trim() || "hello";
+  log("Test text: " + text);
+  transcriptEl.textContent = "You typed: " + text;
+  handleUserInput(text);
+}
+</script>
+
+</body>
+</html>
