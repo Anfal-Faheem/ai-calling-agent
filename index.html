@@ -7,84 +7,174 @@
 <style>
   * { box-sizing: border-box; }
   body {
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    max-width: 600px;
-    margin: 60px auto;
-    padding: 0 20px;
-    background: #f3f4f6;
-    color: #111827;
+    font-family: 'Segoe UI', system-ui, -apple-ui, sans-serif;
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
   }
   .card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
     padding: 28px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    width: 100%;
+    max-width: 560px;
+    margin-top: 0;
+    position: relative;
+    overflow: hidden;
   }
-  h2 { margin-top: 0; font-size: 22px; color: #111827; }
+  /* Loading shimmer SIRF card ke upar (frame par), full page par nahi */
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    animation: shimmer 3s infinite;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 10;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .logo-container {
+    text-align: center;
+    margin-bottom: 16px;
+    animation: float 4s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .logo-container img {
+    max-width: 240px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 4px 8px rgba(37, 99, 235, 0.4));
+  }
   .company-tag {
-    font-size: 14px; color: #6b7280; margin-bottom: 16px;
+    font-size: 14px; color: #94a3b8; margin-bottom: 20px; text-align: center; font-weight: 600;
+    position: relative;
+    z-index: 1;
   }
   .status {
     padding: 10px 14px;
-    border-radius: 10px;
-    margin: 12px 0;
-    font-weight: 600;
+    border-radius: 12px;
+    margin: 14px 0;
+    font-weight: 700;
     font-size: 15px;
     display: flex;
     align-items: center;
     gap: 10px;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    z-index: 1;
   }
-  .status.idle { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
-  .status.listening { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-  .status.thinking { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
-  .status.speaking { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .status.idle { background: rgba(15, 23, 42, 0.6); color: #94a3b8; }
+  .status.listening { background: #166534; color: #dcfce7; border-color: #86efac; }
+  .status.thinking { background: #1e40af; color: #dbeafe; border-color: #bfdbfe; }
+  .status.speaking { background: #92400e; color: #fef3c7; border-color: #fcd34d; }
   .dot {
-    width: 10px; height: 10px; border-radius: 50%; background: #e5e7eb;
-    flex-shrink: 0;
+    width: 10px; height: 10px; border-radius: 50%; background: #475569; flex-shrink: 0;
   }
-  .dot.live { background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  .dot.live { background: #22c55e; box-shadow: 0 0 12px #22c55e; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.45; } 100% { opacity: 1; } }
+  /* Loading spinner dots sirf card ke andar */
+  .loader {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: 6px;
+  }
+  .loader span {
+    width: 6px; height: 6px; background: #f8fafc; border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+  .loader span:nth-child(1) { animation-delay: -0.32s; }
+  .loader span:nth-child(2) { animation-delay: -0.16s; }
+  .loader span:nth-child(3) { animation-delay: 0s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
   #transcript {
-    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px;
-    padding: 14px; min-height: 52px; font-size: 16px; margin-bottom: 14px;
+    background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+    padding: 14px; min-height: 56px; font-size: 16px; margin-bottom: 16px; text-align: center; color: #f8fafc;
+    position: relative;
+    z-index: 1;
   }
-  .voice-box { margin: 14px 0; }
+  .voice-box { margin: 14px 0; text-align: center; position: relative; z-index: 1; }
   .voice-box label {
-    display: block; margin-bottom: 6px; font-size: 14px; color: #374151; font-weight: 600;
+    display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; font-weight: 600;
   }
   select {
-    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 15px;
+    width: 100%; max-width: 300px; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2); font-size: 15px; background: rgba(15, 23, 42, 0.6); color: #f8fafc;
+    margin: 0 auto; display: block;
   }
+  select option { background: #1e293b; color: #f8fafc; }
+  .btn-start { width: 100%; margin: 0 auto 16px auto; display: block; position: relative; z-index: 1; }
+  .btn-row { display: flex; gap: 10px; margin: 16px 0; position: relative; z-index: 1; }
+  .btn-row button { flex: 1; min-width: 0; }
   button {
-    background: #111827; color: white; border: none; padding: 14px 22px;
-    border-radius: 10px; font-size: 17px; cursor: pointer; width: 100%; margin: 8px 0;
+    background: #2563eb; color: #ffffff; border: none; padding: 14px 20px;
+    border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s ease;
   }
-  button:disabled { background: #9ca3af; cursor: not-allowed; }
+  button:hover { background: #3b82f6; transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+  button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+  button.voice-on { background: #059669; }
+  button.voice-on:hover { background: #047857; }
   button.end { background: #dc2626; }
-  button.secondary { background: #059669; }
-  .test-box { margin-top: 16px; border-top: 1px solid #e5e7eb; padding-top: 14px; }
+  button.end:hover { background: #b91c1c; }
+  button.secondary { background: #2563eb; }
+  .test-box {
+    margin-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 16px;
+    text-align: center;
+    display: none;
+    position: relative;
+    z-index: 1;
+  }
   .test-box input {
-    width: 72%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px;
+    width: 72%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); font-size: 14px;
+    background: rgba(15, 23, 42, 0.6); color: #f8fafc;
   }
-  .test-box button { width: 26%; padding: 9px 0; font-size: 14px; }
-  .hint {
-    margin-top: 16px; font-size: 13px; color: #6b7280; line-height: 1.5;
-  }
+  .test-box button { width: 24%; padding: 10px 0; font-size: 14px; }
   .saved {
-    margin-top: 12px; padding: 10px; background: #ecfdf5; border: 1px solid #86efac;
-    border-radius: 8px; font-size: 13px; color: #065f46; display: none;
+    margin-top: 12px; padding: 10px; background: rgba(37, 99, 235, 0.15); border: 1px solid #86efac;
+    border-radius: 10px; font-size: 13px; color: #86efac; display: none; text-align: center;
+    position: relative; z-index: 1;
   }
 </style>
 </head>
 <body>
 
 <div class="card">
-  <h2 id="companyDisplay">Virtual Software Company</h2>
+  <div class="logo-container">
+    <!-- Apni image logo.webp ya logo.png same folder mein rakhein -->
+    <img id="companyLogo" src="logo.webp" alt="Virtual Software Company Logo" onerror="this.src='logo.png'; this.onerror=null;">
+  </div>
   <p class="company-tag" id="agentDisplay">AI Receptionist: Aria</p>
 
+  <button id="mainBtn" class="btn-start" onclick="toggleCall()">Start Call</button>
+
   <div id="status" class="status idle">
-    <span class="dot" id="micDot"></span>Ready. Click <b>Start Call</b>.
+    <span class="dot" id="micDot"></span>Ready. Start your call.
   </div>
 
   <div id="transcript"></div>
@@ -94,21 +184,17 @@
     <select id="voiceSelect"></select>
   </div>
 
-  <button id="mainBtn" class="" onclick="toggleCall()">Start Call</button>
-  <button class="secondary" onclick="testText()">Test: Send Text (No Mic)</button>
+  <div class="btn-row">
+    <button id="voiceBtn" class="voice-off" onclick="toggleVoice()" disabled>Start Voice</button>
+    <button class="secondary" onclick="toggleTextBox()">Send Text</button>
+  </div>
 
-  <div class="test-box">
-    <input type="text" id="testInput" placeholder="Type: hello">
+  <div id="testBox" class="test-box">
+    <input type="text" id="testInput" placeholder="Type your message...">
     <button onclick="testText()">Send</button>
   </div>
 
   <div id="savedBox" class="saved">✅ Appointment saved locally!</div>
-
-  <div class="hint">
-    <b>Tip:</b> Use Chrome or Edge. Allow microphone when asked.<br>
-    <b>Aria:</b> Answers only what you ask. To the point.<br>
-    <b>100% Free:</b> No server, no API key, no phone number needed.
-  </div>
 </div>
 
 <script>
@@ -133,28 +219,27 @@ const synth = window.speechSynthesis;
 let voices = [];
 let recognition = null;
 let isCalling = false;
+let isVoiceActive = false;
 let isProcessing = false;
 let lastFinalText = "";
 let booking = null;
-
-// Update display
-document.getElementById('companyDisplay').textContent = COMPANY_NAME;
-document.getElementById('agentDisplay').textContent = "AI Receptionist: " + AGENT_NAME;
 
 const statusEl = document.getElementById('status');
 const transcriptEl = document.getElementById('transcript');
 const micDot = document.getElementById('micDot');
 const mainBtn = document.getElementById('mainBtn');
+const voiceBtn = document.getElementById('voiceBtn');
 const voiceSelect = document.getElementById('voiceSelect');
 const testInput = document.getElementById('testInput');
 const savedBox = document.getElementById('savedBox');
 
-function setStatus(cls, text) {
+function setStatus(cls, text, showLoader = false) {
   statusEl.className = 'status ' + cls;
   const dotHtml = (cls === 'listening')
     ? '<span class="dot live" id="micDot"></span>'
     : '<span class="dot" id="micDot"></span>';
-  statusEl.innerHTML = dotHtml + text;
+  const loaderHtml = showLoader ? '<span class="loader"><span></span><span></span><span></span></span>' : '';
+  statusEl.innerHTML = dotHtml + text + loaderHtml;
 }
 
 function log(msg) { console.log('[Receptionist]', msg); }
@@ -172,7 +257,6 @@ function populateVoices() {
     voiceSelect.appendChild(option);
     if (isHindiIN && targetIndex === -1) targetIndex = i;
   });
-  // Fallback to any female voice
   if (targetIndex === -1) {
     voices.forEach((v, i) => {
       const name = v.name.toLowerCase();
@@ -194,7 +278,7 @@ populateVoices();
 function speak(text) {
   if (synth.speaking) synth.cancel();
   isProcessing = true;
-  setStatus('speaking', AGENT_NAME + " is speaking...");
+  setStatus('speaking', AGENT_NAME + " is speaking...", true);
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.95;
   u.pitch = 1.1;
@@ -203,26 +287,37 @@ function speak(text) {
   if (!isNaN(sel) && voices[sel]) u.voice = voices[sel];
   u.onend = () => {
     isProcessing = false;
-    if (isCalling) {
-      // Jab bola khatam hua aur sunne ko tayyar hai -> Listening dikhao
-      setTimeout(() => {
-        startListening();
-      }, 600);
-    }
+    setStatus('idle', "Ready. Click Start Voice to speak.", false);
   };
   u.onerror = (e) => {
     log("TTS error: " + e.error);
     isProcessing = false;
-    if (isCalling) startListening();
+    setStatus('idle', "Ready. Click Start Voice to speak.", false);
   };
   synth.speak(u);
 }
 
-function startListening() {
+/* ---------- Manual Voice Button ---------- */
+function toggleVoice() {
+  if (isVoiceActive) {
+    stopVoice();
+  } else {
+    startVoice();
+  }
+}
+
+function startVoice() {
   if (!SpeechRecognition) {
-    setStatus('idle', "Speech recognition not supported. Use Chrome/Edge.");
+    setStatus('idle', "Speech recognition not supported. Use Chrome/Edge.", false);
     return;
   }
+  if (isProcessing) return;
+
+  isVoiceActive = true;
+  voiceBtn.textContent = "Stop Voice";
+  voiceBtn.className = "voice-on";
+  voiceBtn.disabled = false;
+
   if (recognition) {
     try { recognition.stop(); } catch(e) {}
     recognition = null;
@@ -235,12 +330,14 @@ function startListening() {
   recognition.maxAlternatives = 1;
 
   recognition.onspeechstart = () => {
+    log("Speech started.");
     transcriptEl.textContent = "";
-    setStatus('listening', "Listening... Speak now.");
+    setStatus('listening', "Listening... Speak now.", false);
   };
 
   recognition.onspeechend = () => {
-    setStatus('thinking', "Processing...");
+    log("Silence detected.");
+    setStatus('thinking', "Processing", true);
     try { recognition.stop(); } catch(e) {}
   };
 
@@ -250,6 +347,9 @@ function startListening() {
     transcriptEl.textContent = "You said: " + text;
     if (text && text !== lastFinalText) {
       lastFinalText = text;
+      isVoiceActive = false;
+      voiceBtn.textContent = "Start Voice";
+      voiceBtn.className = "voice-off";
       handleUserInput(text);
     }
   };
@@ -257,34 +357,77 @@ function startListening() {
   recognition.onerror = (e) => {
     log("Recognition error: " + e.error);
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      setStatus('idle', "Microphone blocked. Click lock icon → Allow.");
-      endCall();
+      setStatus('idle', "Microphone blocked. Click lock icon → Allow.", false);
+      isVoiceActive = false;
+      voiceBtn.textContent = "Start Voice";
+      voiceBtn.className = "voice-off";
     } else if (e.error === 'no-speech') {
-      if (isCalling) startListening();
-    } else if (isCalling) {
-      setTimeout(() => startListening(), 1000);
+      log("No speech detected.");
+      isVoiceActive = false;
+      voiceBtn.textContent = "Start Voice";
+      voiceBtn.className = "voice-off";
+      setStatus('idle', "No voice detected. Click Start Voice again.", false);
+    } else if (isVoiceActive) {
+      setTimeout(() => startVoice(), 1000);
     }
   };
 
-  recognition.onend = () => { recognition = null; };
+  recognition.onend = () => {
+    recognition = null;
+    if (isVoiceActive) {
+      isVoiceActive = false;
+      voiceBtn.textContent = "Start Voice";
+      voiceBtn.className = "voice-off";
+    }
+  };
 
   try {
     recognition.start();
     log("Recognition started.");
   } catch (e) {
     log("Start error: " + e.message);
+    isVoiceActive = false;
+    voiceBtn.textContent = "Start Voice";
+    voiceBtn.className = "voice-off";
   }
 }
 
+function stopVoice() {
+  isVoiceActive = false;
+  voiceBtn.textContent = "Start Voice";
+  voiceBtn.className = "voice-off";
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+    recognition = null;
+  }
+  setStatus('idle', "Ready. Click Start Voice to speak.", false);
+}
+
+/* ---------- Text Box Toggle ---------- */
+function toggleTextBox() {
+  const box = document.getElementById('testBox');
+  if (box.style.display === 'none' || box.style.display === '') {
+    box.style.display = 'block';
+    testInput.focus();
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+/* ---------- Call Control ---------- */
 function endCall() {
   isCalling = false;
   isProcessing = false;
+  isVoiceActive = false;
   if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
   if (synth.speaking) synth.cancel();
   mainBtn.textContent = "Start Call";
   mainBtn.className = "";
   mainBtn.onclick = toggleCall;
-  setStatus('idle', "Call ended.");
+  voiceBtn.disabled = true;
+  voiceBtn.textContent = "Start Voice";
+  voiceBtn.className = "voice-off";
+  setStatus('idle', "Call ended.", false);
   transcriptEl.textContent = "";
   lastFinalText = "";
   savedBox.style.display = 'none';
@@ -299,63 +442,54 @@ function toggleCall() {
     mainBtn.textContent = "End Call";
     mainBtn.className = "end";
     mainBtn.onclick = toggleCall;
+    voiceBtn.disabled = false;
+    voiceBtn.textContent = "Start Voice";
+    voiceBtn.className = "voice-off";
     speak("Thank you for calling " + COMPANY_NAME + ". This is " + AGENT_NAME + ". How can I help you today?");
   }
 }
 
-/* ============================================================
-   BRAIN - Sirf utna hi jawab jitna pucha gaya
-   ============================================================ */
+/* ---------- Brain (To the point) ---------- */
 function getBrainReply(text) {
   const t = text.toLowerCase().trim();
 
-  // Transfer to human
   if (t.includes('human') || t.includes('transfer') || t.includes('speak to a person') || t.includes('representative') || t.includes('agent')) {
     return { text: "Let me connect you with a member of our team at " + COMPANY_NAME + ".", action: 'transfer' };
   }
 
-  // Office hours only
   if (t.includes('hour') || t.includes('open') || t.includes('time') || t.includes('schedule') || t.includes('when')) {
     return { text: "Our office hours are " + COMPANY_HOURS };
   }
 
-  // Location / Company name only
   if (t.includes('where') || t.includes('location') || t.includes('address') || t.includes('situated') || t.includes('based') || t.includes('about') || t.includes('company') || t.includes('who are you') || t.includes('intro')) {
     return { text: "We are " + COMPANY_NAME + ", located at " + COMPANY_LOCATION };
   }
 
-  // Contact / email only
   if (t.includes('contact') || t.includes('email') || t.includes('mail') || t.includes('phone') || t.includes('call') || t.includes('whatsapp')) {
     return { text: "You can email us at " + COMPANY_EMAIL + "." };
   }
 
-  // Services only
   if (t.includes('service') || t.includes('offer') || t.includes('what do you do') || t.includes('development') || t.includes('software') || t.includes('marketing') || t.includes('seo') || t.includes('automation')) {
     return { text: "We offer " + COMPANY_SERVICES };
   }
 
-  // Solutions only
   if (t.includes('solution') || t.includes('package') || t.includes('transformation') || t.includes('growth') || t.includes('audit') || t.includes('vimz')) {
     return { text: "Our solutions include " + COMPANY_SOLUTIONS };
   }
 
-  // Resources only
   if (t.includes('resource') || t.includes('insight') || t.includes('guide') || t.includes('tool')) {
     return { text: "We provide " + COMPANY_RESOURCES };
   }
 
-  // Portfolio / Recognition only
   if (t.includes('portfolio') || t.includes('recognition') || t.includes('work')) {
     return { text: COMPANY_PORTFOLIO };
   }
 
-  // Appointment booking start
   if (t.includes('appointment') || t.includes('book') || t.includes('schedule a meeting') || t.includes('booking')) {
     booking = { step: 'name', data: {} };
     return { text: "I'd be happy to help you book an appointment with " + COMPANY_NAME + ". May I have your full name, please?" };
   }
 
-  // Booking flow steps
   if (booking) {
     if (booking.step === 'name') {
       booking.data.name = text;
@@ -389,18 +523,17 @@ function getBrainReply(text) {
     }
   }
 
-  // Default short fallback
   return { text: "I can help with office hours, location, services, solutions, or booking an appointment. What would you like to know?" };
 }
 
 async function handleUserInput(text) {
   if (isProcessing) return;
   isProcessing = true;
-  setStatus('thinking', "Processing...");
+  setStatus('thinking', "Processing", true);
   const reply = getBrainReply(text);
   log("AI: " + JSON.stringify(reply));
   if (reply.action === 'transfer') {
-    setStatus('speaking', "Transferring to human...");
+    setStatus('speaking', "Transferring to human...", true);
     speak(reply.text);
     endCall();
     return;
