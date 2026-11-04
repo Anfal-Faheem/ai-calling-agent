@@ -107,26 +107,24 @@
   <div class="hint">
     <b>Tip:</b> Use Chrome or Edge. Allow microphone when asked.<br>
     <b>100% Free:</b> No server, no API key, no phone number needed.<br>
-    <b>Agent:</b> Aria | <b>Company:</b> Virtual Software Company
+    <b>Aria:</b> Replies only what you ask, one thing at a time.
   </div>
 </div>
 
 <script>
 /* ============================================================
-   COMPANY DETAILS - Virtual Software Company
+   COMPANY DETAILS
    ============================================================ */
 const COMPANY_NAME = "Virtual Software Company";
 const AGENT_NAME = "Aria";
-const COMPANY_DESCRIPTION = "Software, AI automation, digital marketing and business growth systems delivered from Pakistan to clients worldwide.";
-const COMPANY_SUMMARY = "Pakistan Headquarters. International Delivery. Software, marketing, SEO and AI automation under one accountable team.";
-const COMPANY_ADDRESS = "4th Floor, Trade Center, G.T. Road, Gujranwala, Pakistan";
+const COMPANY_INTRO = "We are Virtual Software Company, based in Pakistan, delivering software, AI automation, and digital marketing worldwide.";
+const COMPANY_HOURS = "Monday to Friday, 9:00 AM to 6:00 PM Pakistan Time.";
+const COMPANY_ADDRESS = "4th Floor, Trade Center, G.T. Road, Gujranwala, Pakistan.";
 const COMPANY_EMAIL = "hello@virtualsoftwarecompany.com";
-const COMPANY_PHONE = ""; // WhatsApp not added yet
-
-const SERVICES_LIST = "Website Development, Custom Software, AI Automation, SEO & AI Search, and Digital Marketing.";
-const SOLUTIONS_LIST = "Business Packages, Vimz AI Products, Complete Transformation, Overseas Business Growth, and Business Audit.";
-const RESOURCES_LIST = "Insights, Guides & Tools.";
-const OTHER_INFO = "Portfolio and Recognition available.";
+const COMPANY_SERVICES = "Website Development, Custom Software, AI Automation, SEO & AI Search, and Digital Marketing.";
+const COMPANY_SOLUTIONS = "Business Packages, Vimz AI Products, Complete Transformation, Overseas Business Growth, and Business Audit.";
+const COMPANY_RESOURCES = "Insights and Guides & Tools.";
+const COMPANY_PORTFOLIO = "Portfolio and Recognition available on our website.";
 
 /* ============================================================ */
 
@@ -296,14 +294,44 @@ function getBrainReply(text) {
     return { text: "Let me connect you with a member of our team at " + COMPANY_NAME + ".", action: 'transfer' };
   }
 
-  // Office hours
+  // Office hours only
   if (t.includes('hour') || t.includes('open') || t.includes('time') || t.includes('schedule') || t.includes('when')) {
-    return { text: "Our office hours are Monday to Friday, 9:00 AM to 6:00 PM Pakistan Time." };
+    return { text: "Our office hours are " + COMPANY_HOURS };
   }
 
-  // About / company details
-  if (t.includes('about') || t.includes('company') || t.includes('what do you do') || t.includes('services') || t.includes('detail') || t.includes('address') || t.includes('contact') || t.includes('email') || t.includes('where')) {
-    return { text: "We are " + COMPANY_NAME + ". " + COMPANY_SUMMARY + " " + COMPANY_DESCRIPTION + " Our services include " + SERVICES_LIST + " Our solutions include " + SOLUTIONS_LIST + " Resources include " + RESOURCES_LIST + " You can find us at " + COMPANY_ADDRESS + ". Email us at " + COMPANY_EMAIL + "." };
+  // Location only
+  if (t.includes('where') || t.includes('location') || t.includes('address') || t.includes('situated') || t.includes('based')) {
+    return { text: "We are located at " + COMPANY_ADDRESS };
+  }
+
+  // Contact / email only
+  if (t.includes('contact') || t.includes('email') || t.includes('mail') || t.includes('phone') || t.includes('call')) {
+    return { text: "You can email us at " + COMPANY_EMAIL + "." };
+  }
+
+  // Services only
+  if (t.includes('service') || t.includes('offer') || t.includes('what do you do') || t.includes('development') || t.includes('software') || t.includes('marketing') || t.includes('seo') || t.includes('automation')) {
+    return { text: "We offer " + COMPANY_SERVICES };
+  }
+
+  // Solutions only
+  if (t.includes('solution') || t.includes('package') || t.includes('transformation') || t.includes('growth') || t.includes('audit') || t.includes('vimz')) {
+    return { text: "Our solutions include " + COMPANY_SOLUTIONS };
+  }
+
+  // Resources only
+  if (t.includes('resource') || t.includes('insight') || t.includes('guide') || t.includes('tool')) {
+    return { text: "We provide " + COMPANY_RESOURCES };
+  }
+
+  // Portfolio / Recognition only
+  if (t.includes('portfolio') || t.includes('recognition') || t.includes('work')) {
+    return { text: COMPANY_PORTFOLIO };
+  }
+
+  // Brief about only
+  if (t.includes('about') || t.includes('company') || t.includes('who are you') || t.includes('intro')) {
+    return { text: COMPANY_INTRO };
   }
 
   // Start booking
@@ -346,8 +374,8 @@ function getBrainReply(text) {
     }
   }
 
-  // Default / fallback
-  return { text: "Thank you for calling " + COMPANY_NAME + ". I am " + AGENT_NAME + ". I can help you with company details, services, booking an appointment, or transferring you to a human. How can I assist you today?" };
+  // Default / fallback - short, ask back
+  return { text: "I can help with office hours, location, services, or booking an appointment. What would you like to know?" };
 }
 
 async function handleUserInput(text) {
