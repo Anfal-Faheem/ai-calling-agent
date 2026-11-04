@@ -106,8 +106,8 @@
 
   <div class="hint">
     <b>Tip:</b> Use Chrome or Edge. Allow microphone when asked.<br>
-    <b>100% Free:</b> No server, no API key, no phone number needed.<br>
-    <b>Aria:</b> Replies only what you ask, one thing at a time.
+    <b>Aria:</b> Answers only what you ask. To the point.<br>
+    <b>100% Free:</b> No server, no API key, no phone number needed.
   </div>
 </div>
 
@@ -117,14 +117,13 @@
    ============================================================ */
 const COMPANY_NAME = "Virtual Software Company";
 const AGENT_NAME = "Aria";
-const COMPANY_INTRO = "We are Virtual Software Company, based in Pakistan, delivering software, AI automation, and digital marketing worldwide.";
-const COMPANY_HOURS = "Monday to Friday, 9:00 AM to 6:00 PM Pakistan Time.";
-const COMPANY_ADDRESS = "4th Floor, Trade Center, G.T. Road, Gujranwala, Pakistan.";
+const COMPANY_LOCATION = "4th Floor, Trade Center, G.T. Road, Gujranwala, Pakistan.";
 const COMPANY_EMAIL = "hello@virtualsoftwarecompany.com";
+const COMPANY_HOURS = "Monday to Friday, 9:00 AM to 6:00 PM Pakistan Time.";
 const COMPANY_SERVICES = "Website Development, Custom Software, AI Automation, SEO & AI Search, and Digital Marketing.";
 const COMPANY_SOLUTIONS = "Business Packages, Vimz AI Products, Complete Transformation, Overseas Business Growth, and Business Audit.";
 const COMPANY_RESOURCES = "Insights and Guides & Tools.";
-const COMPANY_PORTFOLIO = "Portfolio and Recognition available on our website.";
+const COMPANY_PORTFOLIO = "Portfolio and Recognition are available.";
 
 /* ============================================================ */
 
@@ -173,6 +172,7 @@ function populateVoices() {
     voiceSelect.appendChild(option);
     if (isHindiIN && targetIndex === -1) targetIndex = i;
   });
+  // Fallback to any female voice
   if (targetIndex === -1) {
     voices.forEach((v, i) => {
       const name = v.name.toLowerCase();
@@ -203,7 +203,12 @@ function speak(text) {
   if (!isNaN(sel) && voices[sel]) u.voice = voices[sel];
   u.onend = () => {
     isProcessing = false;
-    if (isCalling) setTimeout(() => startListening(), 700);
+    if (isCalling) {
+      // Jab bola khatam hua aur sunne ko tayyar hai -> Listening dikhao
+      setTimeout(() => {
+        startListening();
+      }, 600);
+    }
   };
   u.onerror = (e) => {
     log("TTS error: " + e.error);
@@ -222,19 +227,23 @@ function startListening() {
     try { recognition.stop(); } catch(e) {}
     recognition = null;
   }
+
   recognition = new SpeechRecognition();
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = 'en-US';
   recognition.maxAlternatives = 1;
+
   recognition.onspeechstart = () => {
     transcriptEl.textContent = "";
     setStatus('listening', "Listening... Speak now.");
   };
+
   recognition.onspeechend = () => {
     setStatus('thinking', "Processing...");
     try { recognition.stop(); } catch(e) {}
   };
+
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript.trim();
     log("Recognized: " + text);
@@ -244,6 +253,7 @@ function startListening() {
       handleUserInput(text);
     }
   };
+
   recognition.onerror = (e) => {
     log("Recognition error: " + e.error);
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
@@ -255,8 +265,15 @@ function startListening() {
       setTimeout(() => startListening(), 1000);
     }
   };
+
   recognition.onend = () => { recognition = null; };
-  try { recognition.start(); } catch (e) { log("Start error: " + e.message); }
+
+  try {
+    recognition.start();
+    log("Recognition started.");
+  } catch (e) {
+    log("Start error: " + e.message);
+  }
 }
 
 function endCall() {
@@ -286,6 +303,9 @@ function toggleCall() {
   }
 }
 
+/* ============================================================
+   BRAIN - Sirf utna hi jawab jitna pucha gaya
+   ============================================================ */
 function getBrainReply(text) {
   const t = text.toLowerCase().trim();
 
@@ -299,13 +319,13 @@ function getBrainReply(text) {
     return { text: "Our office hours are " + COMPANY_HOURS };
   }
 
-  // Location only
-  if (t.includes('where') || t.includes('location') || t.includes('address') || t.includes('situated') || t.includes('based')) {
-    return { text: "We are located at " + COMPANY_ADDRESS };
+  // Location / Company name only
+  if (t.includes('where') || t.includes('location') || t.includes('address') || t.includes('situated') || t.includes('based') || t.includes('about') || t.includes('company') || t.includes('who are you') || t.includes('intro')) {
+    return { text: "We are " + COMPANY_NAME + ", located at " + COMPANY_LOCATION };
   }
 
   // Contact / email only
-  if (t.includes('contact') || t.includes('email') || t.includes('mail') || t.includes('phone') || t.includes('call')) {
+  if (t.includes('contact') || t.includes('email') || t.includes('mail') || t.includes('phone') || t.includes('call') || t.includes('whatsapp')) {
     return { text: "You can email us at " + COMPANY_EMAIL + "." };
   }
 
@@ -329,18 +349,13 @@ function getBrainReply(text) {
     return { text: COMPANY_PORTFOLIO };
   }
 
-  // Brief about only
-  if (t.includes('about') || t.includes('company') || t.includes('who are you') || t.includes('intro')) {
-    return { text: COMPANY_INTRO };
-  }
-
-  // Start booking
+  // Appointment booking start
   if (t.includes('appointment') || t.includes('book') || t.includes('schedule a meeting') || t.includes('booking')) {
     booking = { step: 'name', data: {} };
     return { text: "I'd be happy to help you book an appointment with " + COMPANY_NAME + ". May I have your full name, please?" };
   }
 
-  // Booking flow
+  // Booking flow steps
   if (booking) {
     if (booking.step === 'name') {
       booking.data.name = text;
@@ -374,13 +389,14 @@ function getBrainReply(text) {
     }
   }
 
-  // Default / fallback - short, ask back
-  return { text: "I can help with office hours, location, services, or booking an appointment. What would you like to know?" };
+  // Default short fallback
+  return { text: "I can help with office hours, location, services, solutions, or booking an appointment. What would you like to know?" };
 }
 
 async function handleUserInput(text) {
   if (isProcessing) return;
   isProcessing = true;
+  setStatus('thinking', "Processing...");
   const reply = getBrainReply(text);
   log("AI: " + JSON.stringify(reply));
   if (reply.action === 'transfer') {
