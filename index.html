@@ -478,6 +478,40 @@ function getBrainReply(text) {
     return { text: "Let me connect you with a member of our team at " + COMPANY_NAME + ".", action: 'transfer' };
   }
 
+  // ===== BOOKING FLOW HANDLED FIRST =====
+  if (booking) {
+    if (booking.step === 'name') {
+      booking.data.name = text;
+      booking.step = 'email';
+      return { text: "Thank you. What is your email address?" };
+    }
+    if (booking.step === 'email') {
+      booking.data.email = text;
+      booking.step = 'date';
+      return { text: "Got it. What is your preferred date?" };
+    }
+    if (booking.step === 'date') {
+      booking.data.date = text;
+      booking.step = 'time';
+      return { text: "And what time would you prefer?" };
+    }
+    if (booking.step === 'time') {
+      booking.data.time = text;
+      booking.step = 'purpose';
+      return { text: "Lastly, what is the purpose of your visit?" };
+    }
+    if (booking.step === 'purpose') {
+      booking.data.purpose = text;
+      const appts = JSON.parse(localStorage.getItem('vsc_appointments') || '[]');
+      appts.push({ ...booking.data, bookedAt: new Date().toISOString(), company: COMPANY_NAME });
+      localStorage.setItem('vsc_appointments', JSON.stringify(appts));
+      const done = booking;
+      booking = null;
+      savedBox.style.display = 'block';
+      return { text: "Thank you, " + done.data.name + ". Your appointment has been booked with " + COMPANY_NAME + ". We look forward to seeing you." };
+    }
+  }
+
   // Office hours only
   if (t.includes('hour') || t.includes('open') || t.includes('time') || t.includes('schedule') || t.includes('when')) {
     return { text: "Our office hours are " + COMPANY_HOURS };
@@ -522,40 +556,6 @@ function getBrainReply(text) {
   if (t.includes('appointment') || t.includes('book') || t.includes('schedule a meeting') || t.includes('booking')) {
     booking = { step: 'name', data: {} };
     return { text: "I'd be happy to help you book an appointment with " + COMPANY_NAME + ". May I have your full name, please?" };
-  }
-
-  // Booking flow steps
-  if (booking) {
-    if (booking.step === 'name') {
-      booking.data.name = text;
-      booking.step = 'email';
-      return { text: "Thank you. What is your email address?" };
-    }
-    if (booking.step === 'email') {
-      booking.data.email = text;
-      booking.step = 'date';
-      return { text: "Got it. What is your preferred date?" };
-    }
-    if (booking.step === 'date') {
-      booking.data.date = text;
-      booking.step = 'time';
-      return { text: "And what time would you prefer?" };
-    }
-    if (booking.step === 'time') {
-      booking.data.time = text;
-      booking.step = 'purpose';
-      return { text: "Lastly, what is the purpose of your visit?" };
-    }
-    if (booking.step === 'purpose') {
-      booking.data.purpose = text;
-      const appts = JSON.parse(localStorage.getItem('vsc_appointments') || '[]');
-      appts.push({ ...booking.data, bookedAt: new Date().toISOString(), company: COMPANY_NAME });
-      localStorage.setItem('vsc_appointments', JSON.stringify(appts));
-      const done = booking;
-      booking = null;
-      savedBox.style.display = 'block';
-      return { text: "Thank you, " + done.data.name + ". Your appointment has been booked with " + COMPANY_NAME + ". We look forward to seeing you." };
-    }
   }
 
   // Default fallback: off-topic or detailed question -> transfer
